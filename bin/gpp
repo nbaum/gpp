@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require 'gpp'
+require 'pathname'
+require 'optparse'
+
+from, to = nil, nil
+
+OptionParser.new do |opts|
+  opts.version = GPP::VERSION
+  opts.banner = "Usage: #{opts.program_name} [-hv] [files]"
+  opts.on "-r PATTERN" do |value|
+    _, from, to = value.split("/")
+    from = /#{from}/
+  end
+end.order!
+
+args = ARGV.empty? ? ["-"] : ARGV
+
+args.each do |arg|
+  file = arg == "-" ? STDIN.read : File.read(arg)
+  out = if from
+    File.open(arg.gsub(from, to), "w")
+  else
+    STDOUT
+  end
+  rpp = GPP::Processor.new(file, out, arg, 1)
+  rpp.scan_all
+end
